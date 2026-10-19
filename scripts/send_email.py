@@ -4,15 +4,6 @@ SKRIP PENGIRIMAN EMAIL UNDANGAN DEMONSTRASI UTS KJK MENGGUNAKAN PYTHON
 =============================================================================
 Skrip ini mengirimkan email undangan demonstrasi interaktif ke teman
 menggunakan server SMTP Gmail dengan format HTML responsif & Plain Text.
-
-CARA MENDAPATKAN APP PASSWORD GMAIL:
-1. Akun Gmail pengirim wajib mengaktifkan Verifikasi 2 Langkah (2-Step Verification).
-2. Buka tautan: https://myaccount.google.com/apppasswords
-3. Buat Sandi Aplikasi (App Password) baru:
-   - Nama aplikasi: "Demo KJK"
-   - Klik "Create" / "Buat"
-4. Google akan menampilkan 16 karakter kode (contoh: "abcd efgh ijkl mnop").
-5. Masukkan kode tersebut ke skrip ini.
 """
 
 import smtplib
@@ -23,26 +14,34 @@ import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+def load_env_local():
+    """Membaca variabel dari file .env.local jika ada (agar kredensial tetap aman)"""
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path = os.path.join(project_root, ".env.local")
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip("\"'")
+                    if k not in os.environ and v:
+                        os.environ[k] = v
+
+load_env_local()
+
 # =============================================================================
-# KONFIGURASI DEFAULT (Bisa langsung diisi di sini atau lewat input interaktif)
+# KONFIGURASI PENGIRIMAN EMAIL
 # =============================================================================
 
-# 1. Email Gmail Anda sebagai pengirim
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")
-
-# 2. 16 Karakter App Password (Sandi Aplikasi) dari akun Google Anda
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
-
-# 3. Tautan website demo Anda di Vercel
 DEMO_URL = os.getenv("DEMO_URL", "https://ocha-adelia-kjk.vercel.app")
-
-# 4. Nama Pengirim
 SENDER_NAME = "Ocha Adelia"
 
-# 5. Daftar email penerima default (jika ingin disimpan di skrip)
 DEFAULT_RECIPIENTS = [
-    # "teman1@gmail.com",
-    # "teman2@gmail.com",
+    # Masukkan email teman Anda di sini atau masukkan lewat prompt interaktif
 ]
 
 SUBJECT = "[UTS KJK] Undangan Partisipasi Demonstrasi Interaktif Keamanan Sistem"
@@ -176,7 +175,7 @@ def main():
 
     sender = SENDER_EMAIL
     if not sender:
-        sender = input("Masukkan Email Gmail Pengirim: ").strip()
+        sender = input("Masukkan Email Gmail Anda (Pengirim): ").strip()
 
     app_pass = APP_PASSWORD
     if not app_pass:
@@ -209,7 +208,7 @@ def main():
 
     try:
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-            print("[*] Melakukan login...")
+            print("[*] Melakukan login dengan akun pengirim...")
             server.login(sender, clean_pass)
             print("[+] Autentikasi berhasil!\n")
 
@@ -240,7 +239,7 @@ def main():
 
     except smtplib.SMTPAuthenticationError:
         print("\n[x] GAGAL AUTENTIKASI GMAIL:")
-        print("    1. Pastikan 'Verifikasi 2 Langkah' aktif pada akun Google Anda.")
+        print("    1. Pastikan alamat email pengirim dan Sandi Aplikasi sudah sesuai.")
         print("    2. Gunakan 16 karakter 'Sandi Aplikasi' (App Password), BUKAN sandi akun Google biasa.")
         print("    3. Buat di: https://myaccount.google.com/apppasswords")
     except Exception as e:
