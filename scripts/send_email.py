@@ -15,7 +15,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 def load_env_local():
-    """Membaca variabel dari file .env.local jika ada (agar kredensial tetap aman)"""
+    """Membaca variabel dari file .env.local jika ada"""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     env_path = os.path.join(project_root, ".env.local")
     if os.path.exists(env_path):
@@ -41,7 +41,7 @@ DEMO_URL = os.getenv("DEMO_URL", "https://ocha-adelia-kjk.vercel.app")
 SENDER_NAME = "Ocha Adelia"
 
 DEFAULT_RECIPIENTS = [
-    # Masukkan email teman Anda di sini atau masukkan lewat prompt interaktif
+    "mudahnian686@gmail.com",
 ]
 
 SUBJECT = "[UTS KJK] Undangan Partisipasi Demonstrasi Interaktif Keamanan Sistem"
@@ -168,6 +168,32 @@ Mahasiswa Keamanan Jaringan & Komputer
     return plain_text, html_content
 
 
+def connect_and_login(sender: str, clean_pass: str):
+    """
+    Menghubungkan ke SMTP Gmail dengan TLS (Port 587) atau SSL (Port 465).
+    """
+    context = ssl.create_default_context()
+    
+    # Coba port 587 (TLS) terlebih dahulu
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
+        server.ehlo()
+        server.starttls(context=context)
+        server.ehlo()
+        server.login(sender, clean_pass)
+        return server
+    except smtplib.SMTPAuthenticationError:
+        raise
+    except Exception as e587:
+        # Fallback ke port 465 (SSL)
+        try:
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=15)
+            server.login(sender, clean_pass)
+            return server
+        except Exception:
+            raise e587
+
+
 def main():
     print("=" * 65)
     print("  PENGIRIM EMAIL UNDANGAN DEMONSTRASI UTS KJK (PYTHON)")
@@ -180,7 +206,7 @@ def main():
     app_pass = APP_PASSWORD
     if not app_pass:
         print("\nCatatan: Masukkan 16 karakter App Password dari Google")
-        print("Tautan panduan: https://myaccount.google.com/apppasswords")
+        print("Tautan: https://myaccount.google.com/apppasswords")
         app_pass = getpass.getpass("Masukkan Google App Password: ").strip()
 
     demo_link = DEMO_URL
@@ -200,50 +226,47 @@ def main():
     clean_pass = app_pass.replace(" ", "")
     plain_body, html_body = create_email_body(SENDER_NAME, demo_link)
 
-    smtp_host = "smtp.gmail.com"
-    smtp_port = 465
-    context = ssl.create_default_context()
-
-    print(f"\n[*] Menghubungkan ke SMTP Gmail ({smtp_host}:{smtp_port})...")
+    print(f"\n[*] Menghubungkan ke server SMTP Gmail...")
 
     try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-            print("[*] Melakukan login dengan akun pengirim...")
-            server.login(sender, clean_pass)
-            print("[+] Autentikasi berhasil!\n")
+        server = connect_and_login(sender, clean_pass)
+        print(f"[+] Autentikasi akun ({sender}) berhasil!\n")
 
-            total = len(recipients)
-            success_count = 0
+        total = len(recipients)
+        success_count = 0
 
-            for index, recipient in enumerate(recipients, start=1):
-                print(f"[{index}/{total}] Mengirim ke {recipient} ...", end=" ", flush=True)
+        for index, recipient in enumerate(recipients, start=1):
+            print(f"[{index}/{total}] Mengirim ke {recipient} ...", end=" ", flush=True)
 
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = SUBJECT
-                msg["From"] = f"{SENDER_NAME} <{sender}>"
-                msg["To"] = recipient
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = SUBJECT
+            msg["From"] = f"{SENDER_NAME} <{sender}>"
+            msg["To"] = recipient
 
-                msg.attach(MIMEText(plain_body, "plain", "utf-8"))
-                msg.attach(MIMEText(html_body, "html", "utf-8"))
+            msg.attach(MIMEText(plain_body, "plain", "utf-8"))
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-                try:
-                    server.sendmail(sender, recipient, msg.as_string())
-                    print("BERHASIL [v]")
-                    success_count += 1
-                except Exception as err:
-                    print(f"GAGAL [x] -> {err}")
+            try:
+                server.sendmail(sender, recipient, msg.as_string())
+                print("BERHASIL [v]")
+                success_count += 1
+            except Exception as err:
+                print(f"GAGAL [x] -> {err}")
 
-            print("\n" + "=" * 65)
-            print(f"[+] SELESAI: {success_count} dari {total} email berhasil dikirimkan.")
-            print("=" * 65)
+        server.quit()
+
+        print("\n" + "=" * 65)
+        print(f"[+] SELESAI: {success_count} dari {total} email berhasil dikirimkan!")
+        print("=" * 65)
 
     except smtplib.SMTPAuthenticationError:
         print("\n[x] GAGAL AUTENTIKASI GMAIL:")
-        print("    1. Pastikan alamat email pengirim dan Sandi Aplikasi sudah sesuai.")
-        print("    2. Gunakan 16 karakter 'Sandi Aplikasi' (App Password), BUKAN sandi akun Google biasa.")
-        print("    3. Buat di: https://myaccount.google.com/apppasswords")
+        print("    Google menolak kombinasi email dan Sandi Aplikasi (BadCredentials).")
+        print("    Hal ini biasanya terjadi jika:")
+        print("    1. Sandi Aplikasi (cygd nhxr arql qajs) dibuat pada akun Google yang berbeda dengan email pengirim.")
+        print("    2. Pastikan akun Google yang Anda gunakan untuk membuat Sandi Aplikasi di myaccount.google.com/apppasswords sama persis dengan email pengirim.")
     except Exception as e:
-        print(f"\n[x] Terjadi kesalahan: {e}")
+        print(f"\n[x] Terjadi kesalahan koneksi: {e}")
 
 
 if __name__ == "__main__":
