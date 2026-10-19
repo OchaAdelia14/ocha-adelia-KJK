@@ -114,28 +114,25 @@ Untuk mencatat interaksi ke Google Sheets:
 ## 🌐 Langkah 3: Deployment ke Vercel via GitHub
 
 ### A. Push Proyek ke GitHub
-1. Buat repository baru di GitHub (misalnya: `kjk-interactive-demo`).
-2. Di terminal folder proyek ini (`D:\Project UTS KJK`), jalankan:
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: initial commit interactive demo kjk"
-   git branch -M main
-   git remote add origin https://github.com/USERNAME_ANDA/kjk-interactive-demo.git
-   git push -u origin main
-   ```
+Repositori GitHub telah disiapkan di: [https://github.com/OchaAdelia14/ocha-adelia-KJK](https://github.com/OchaAdelia14/ocha-adelia-KJK)
+
+Git repository lokal telah diinisialisasi dan seluruh kode sudah di-commit di branch `main`. Cukup jalankan perintah push berikut di terminal Anda:
+```bash
+git push -u origin main
+```
+*(Jika diminta autentikasi oleh GitHub, masukkan kredensial akun GitHub Anda atau Personal Access Token).*
 
 ### B. Hubungkan dan Deploy ke Vercel
 1. Buka [https://vercel.com](https://vercel.com) dan login menggunakan akun GitHub Anda.
 2. Klik tombol **Add New...** > pilih **Project**.
-3. Cari dan pilih repository `kjk-interactive-demo` yang baru saja Anda push, lalu klik **Import**.
+3. Cari dan pilih repository **`ocha-adelia-KJK`**, lalu klik **Import**.
 4. Pada bagian **Environment Variables**:
    - **Key**: `GOOGLE_SCRIPT_URL`
    - **Value**: Masukkan Web App URL dari Google Apps Script Anda (yang berakhiran `/exec`).
    - Klik tombol **Add**.
 5. Klik tombol **Deploy**.
 6. Tunggu proses build selesai (kurang lebih 1 menit).
-7. Setelah selesai, Vercel akan memberikan tautan publik domain Anda (misal: `https://kjk-interactive-demo.vercel.app`).
+7. Setelah selesai, Vercel akan memberikan tautan publik domain Anda (misal: `https://ocha-adelia-kjk.vercel.app`).
 8. Tautan ini siap dibagikan ke teman atau dosen melalui email untuk demonstrasi interaktif!
 
 ---
